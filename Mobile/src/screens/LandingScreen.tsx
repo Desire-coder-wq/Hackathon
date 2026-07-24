@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Image, Platform, Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
 
 export function LandingScreen({ onStart, onLogin }: { onStart: () => void; onLogin: () => void }) {
-  return <LinearGradient colors={['#d9f2ee', '#fbf8f5', '#fff2d3']} locations={[0, .48, 1]} style={styles.gradient}>
+  return <View style={styles.gradient}>
+    <View style={styles.tealWash} /><View style={styles.amberWash} />
     <SafeAreaView style={styles.safe}>
       <View style={styles.orbOne} /><View style={styles.orbTwo} />
       <View style={styles.header}><Image source={require('../../assets/skillproof-logo.png')} style={styles.logo} /><Text style={styles.brand}>SkillProof</Text></View>
@@ -21,11 +21,13 @@ export function LandingScreen({ onStart, onLogin }: { onStart: () => void; onLog
         <View style={styles.trust}><Ionicons name="shield-checkmark-outline" size={17} color="#087f83" /><Text style={styles.trustText}>Tamper-evident credentials</Text><Ionicons name="cellular-outline" size={17} color="#087f83" /><Text style={styles.trustText}>Low-data ready</Text></View>
       </View>
     </SafeAreaView>
-  </LinearGradient>;
+  </View>;
 }
 
 const styles = StyleSheet.create({
   gradient: { flex: 1 },
+  tealWash: { position: 'absolute', width: '130%', height: '58%', top: -120, left: -80, borderBottomRightRadius: 260, backgroundColor: '#d9f2ee', opacity: .92 },
+  amberWash: { position: 'absolute', width: '125%', height: '48%', bottom: -150, right: -100, borderTopLeftRadius: 260, backgroundColor: '#fff0c8', opacity: .9 },
   safe: { flex: 1, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
   orbOne: { position: 'absolute', width: 210, height: 210, borderRadius: 105, backgroundColor: 'rgba(8,127,131,.09)', top: 75, right: -90 },
   orbTwo: { position: 'absolute', width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(255,189,39,.13)', bottom: 20, left: -75 },
