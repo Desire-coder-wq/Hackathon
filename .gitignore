@@ -1,0 +1,20 @@
+# Local dependencies and build products
+**/node_modules/
+**/dist/
+**/dist-test/
+**/eas-archive-check/
+**/eas-*-check/
+**/.expo/
+**/*.log
+
+# Secrets
+**/.env
+!**/.env.example
+
+# Agent tooling may contain Windows junctions that EAS cannot archive
+**/.agents/
+**/.claude/
+**/.windsurf/
+
+# Generated Prisma client
+backend/generated/prisma/

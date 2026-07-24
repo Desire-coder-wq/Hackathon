@@ -3,6 +3,13 @@
 # dependencies
 node_modules/
 .env
+.agents/
+.claude/
+.windsurf/
+dist-test/
+eas-archive-check/
+eas-*-check/
+*.log
 
 # Expo
 .expo/

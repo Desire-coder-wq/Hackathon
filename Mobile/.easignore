@@ -1,0 +1,29 @@
+# Dependencies are installed by EAS from package-lock.json.
+node_modules/
+
+# Local and generated files
+.expo/
+dist/
+dist-test/
+eas-archive-check/
+eas-*-check/
+web-build/
+*.log
+.env
+.env.*
+!.env.example
+
+# Editor and agent metadata
+.vscode/
+.agents/
+.claude/
+.windsurf/
+AGENTS.md
+CLAUDE.md
+
+# Native output is generated during prebuild
+android/
+ios/
+
+# Never package a backend if one is accidentally copied under Mobile.
+backend/
