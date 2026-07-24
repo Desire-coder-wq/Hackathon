@@ -2,14 +2,18 @@
   "expo": {
     "name": "SkillProof UG",
     "slug": "skillproof-ug",
+    "owner": "beyond-sports-uganda",
     "version": "1.0.0",
+    "scheme": "skillproof",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "ug.co.beyondsports.skillproof"
     },
     "android": {
+      "package": "ug.co.beyondsports.skillproof",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -20,6 +24,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "31d685cc-7539-4034-937d-f33d7f1ff39f"
+      }
     }
   }
 }
