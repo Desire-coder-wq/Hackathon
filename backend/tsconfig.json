@@ -12,8 +12,14 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strict": true,
-    "strictPropertyInitialization": false
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "generated/**/*.ts"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
