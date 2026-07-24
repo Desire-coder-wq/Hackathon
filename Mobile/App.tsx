@@ -4,15 +4,21 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ApplicationScreen } from './src/screens/ApplicationScreen';
 import { AssessmentScreen } from './src/screens/AssessmentScreen';
 import { AuthScreen } from './src/screens/AuthScreen';
+import { CompleteGigScreen } from './src/screens/CompleteGigScreen';
 import { CredentialScreen } from './src/screens/CredentialScreen';
 import { JobsScreen } from './src/screens/JobsScreen';
+import { LandingScreen } from './src/screens/LandingScreen';
+import { MarkedCompleteScreen } from './src/screens/MarkedCompleteScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
+import { ProfileSetupScreen } from './src/screens/ProfileSetupScreen';
 import { RatingScreen } from './src/screens/RatingScreen';
 import { RetryScreen } from './src/screens/RetryScreen';
 import { ReviewScreen } from './src/screens/ReviewScreen';
 import { SuccessScreen } from './src/screens/SuccessScreen';
+import { BackNavigationProvider } from './src/navigation/BackNavigation';
 
 const screens = [
+  ProfileSetupScreen,
   AssessmentScreen,
   RetryScreen,
   ReviewScreen,
@@ -20,16 +26,23 @@ const screens = [
   JobsScreen,
   ApplicationScreen,
   SuccessScreen,
+  CompleteGigScreen,
+  MarkedCompleteScreen,
   ProfileScreen,
   RatingScreen,
 ];
 
-const labels = ['Assessment', 'Retry', 'Mentor', 'Credential', 'Gigs', 'Apply', 'Success', 'Profile', 'Rate'];
+const labels = ['Profile Setup', 'Assessment', 'Retry', 'Mentor', 'Credential', 'Gigs', 'Apply', 'Success', 'Complete Gig', 'Completed', 'Profile', 'Rate'];
 
 export default function App() {
+  const [started, setStarted] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [index, setIndex] = useState(0);
   const next = () => setIndex((current) => (current + 1) % screens.length);
+
+  if (!started) {
+    return <LandingScreen onStart={() => setStarted(true)} onLogin={() => setStarted(true)} />;
+  }
 
   if (!authenticated) {
     return (
@@ -37,7 +50,7 @@ export default function App() {
         <StatusBar style="dark" />
         <AuthScreen
           onDone={(goal) => {
-            setIndex(goal === 'learn' ? 0 : 4);
+            setIndex(goal === 'learn' ? 0 : 5);
             setAuthenticated(true);
           }}
         />
@@ -50,12 +63,14 @@ export default function App() {
   return (
     <View style={styles.app}>
       <StatusBar style="dark" />
-      <CurrentScreen onDone={next} />
+      <BackNavigationProvider onBack={() => setIndex((index + screens.length - 1) % screens.length)}>
+        <CurrentScreen onDone={next} />
+      </BackNavigationProvider>
       <View style={styles.demoNav}>
         <Pressable onPress={() => setIndex((index + screens.length - 1) % screens.length)} style={styles.navButton}>
           <Text style={styles.navButtonText}>{'<'}</Text>
         </Pressable>
-        <Pressable onPress={() => setAuthenticated(false)}>
+        <Pressable onPress={() => { setAuthenticated(false); setStarted(false); }}>
           <Text style={styles.demoText}>Demo {index + 1}/{screens.length} - {labels[index]} - Log out</Text>
         </Pressable>
         <Pressable onPress={next} style={styles.navButton}>

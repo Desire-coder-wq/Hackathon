@@ -22,4 +22,6 @@
 /Mobile/dist-test/
 /Mobile/eas-archive-check/
 /Mobile/eas-*-check/
+/Mobile/dist-visual-check/
+/Mobile/dist-*-check/
 .git/

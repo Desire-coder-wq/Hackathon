@@ -1,5 +1,7 @@
 import { ReactNode } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Image, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { useBackNavigation } from '../navigation/BackNavigation';
 
 export function ScreenShell({
   title,
@@ -18,9 +20,14 @@ export function ScreenShell({
   secondaryLabel?: string;
   onSecondary?: () => void;
 }) {
+  const onBack = useBackNavigation();
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}><Text style={styles.brand}>SkillProof</Text><Text style={styles.signal}>⌁</Text></View>
+      <View style={styles.header}>
+        {onBack ? <Pressable onPress={onBack} style={styles.back} hitSlop={10}><Ionicons name="arrow-back" size={22} color="#075d61" /></Pressable> : null}
+        <View style={styles.brandRow}><Image source={require('../../assets/skillproof-logo.png')} style={styles.logo} /><Text style={styles.brand}>SkillProof</Text></View>
+        <Ionicons name="cellular-outline" size={20} color="#075d61" />
+      </View>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -57,18 +64,20 @@ export const ui = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#faf8f5' },
-  header: { height: 58, paddingHorizontal: 18, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e8e2da', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  safe: { flex: 1, backgroundColor: '#faf8f5', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
+  header: { height: 66, paddingHorizontal: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e8e2da', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  back: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#e9f6f4', alignItems: 'center', justifyContent: 'center', marginRight: 8 },
   brand: { color: '#075d61', fontSize: 20, fontWeight: '900' },
-  signal: { color: '#075d61', fontSize: 22 },
+  brandRow: { flexDirection: 'row', alignItems: 'center' },
+  logo: { width: 32, height: 32, borderRadius: 9, marginRight: 8 },
   content: { padding: 18, paddingBottom: 42 },
   title: { color: '#18383a', fontSize: 24, lineHeight: 29, fontWeight: '900', marginTop: 8 },
   subtitle: { color: '#667476', fontSize: 13, lineHeight: 19, marginTop: 6, marginBottom: 18 },
   card: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e1dcd5', borderRadius: 10, padding: 14, marginBottom: 13 },
   cardAccent: { backgroundColor: '#edf8f7', borderColor: '#8fc9c6' },
   label: { color: '#425355', fontSize: 10, fontWeight: '800', marginBottom: 6, marginTop: 5, letterSpacing: 0.3 },
-  primary: { backgroundColor: '#087f83', borderRadius: 7, padding: 15, alignItems: 'center', marginTop: 8 },
-  primaryText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  primary: { backgroundColor: '#ffbd27', borderRadius: 7, padding: 15, alignItems: 'center', marginTop: 8 },
+  primaryText: { color: '#fff', fontSize: 13, fontWeight: '900' },
   secondary: { borderWidth: 1, borderColor: '#087f83', borderRadius: 7, padding: 14, alignItems: 'center', marginTop: 10 },
   secondaryText: { color: '#087f83', fontSize: 13, fontWeight: '800' },
 });

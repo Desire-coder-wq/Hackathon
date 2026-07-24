@@ -9,6 +9,8 @@ node_modules/
 dist-test/
 eas-archive-check/
 eas-*-check/
+dist-visual-check/
+dist-*-check/
 *.log
 
 # Expo

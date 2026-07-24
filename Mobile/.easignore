@@ -7,6 +7,8 @@ dist/
 dist-test/
 eas-archive-check/
 eas-*-check/
+dist-visual-check/
+dist-*-check/
 web-build/
 *.log
 .env
