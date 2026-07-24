@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  YOUTH // learner / gig worker
+  EMPLOYER // posts gigs / hires
+  ASSESSOR // human verifier / mentor
+  ADMIN
+}
+
+enum ModuleContentType {
+  TEXT
+  AUDIO
+  IMAGE
+  VIDEO // optional, wifi-gated on frontend
+}
+
+enum SubmissionType {
+  TEXT
+  IMAGE
+  AUDIO
+  FILE
+  LINK
+}
+
+enum SubmissionStatus {
+  PENDING
+  AI_GRADED
+  HUMAN_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum CredentialTier {
+  TASK_VERIFIED // passed AI/rubric grading
+  HUMAN_VERIFIED // spot-checked by an assessor
+  FIELD_VERIFIED // confirmed by a real employer/client after paid work
+}
+
+enum GigStatus {
+  OPEN
+  MATCHED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum MatchStatus {
+  SUGGESTED
+  ACCEPTED
+  DECLINED
+  COMPLETED
+}
+
+enum NotificationType {
+  MODULE_UNLOCKED
+  SUBMISSION_GRADED
+  CREDENTIAL_ISSUED
+  GIG_MATCHED
+  GIG_STATUS_CHANGE
+  ASSESSOR_REVIEW_NEEDED
+}
+
+// ============================================
+// USERS & PROFILES
+// ============================================
+
+model User {
+  id            String   @id @default(cuid())
+  phone         String   @unique // primary login for low-smartphone users
+  email         String?  @unique
+  passwordHash  String?
+  role          UserRole @default(YOUTH)
+  fullName      String
+  languagePref  String   @default("en") // en, lg, etc.
+  location      String? // district/town, free text or geo later
+  avatarUrl     String?
+  dataSaverMode Boolean  @default(true) // drives frontend media behavior
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  youthProfile    YouthProfile?
+  employerProfile EmployerProfile?
+  assessorProfile AssessorProfile?
+
+  enrollments      Enrollment[]
+  submissions      Submission[]
+  credentials      Credential[]
+  gigsPosted       Gig[]          @relation("GigPoster")
+  gigMatches       GigMatch[]
+  notifications    Notification[]
+  assessmentsGiven Assessment[]   @relation("AssessorGivenAssessments")
+}
+
+model YouthProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  bio         String?
+  goals       String? // "wants income in <30 days" etc.
+  totalEarned Decimal  @default(0) // aggregated from completed gigs
+  createdAt   DateTime @default(now())
+}
+
+model EmployerProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  businessName String
+  businessType String? // "informal trade", "SME", "gig platform"
+  verified     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model AssessorProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  expertiseTags String[] // ["graphic-design", "mobile-money"]
+  trustScore    Int      @default(0) // built from assessment quality over time
+  createdAt     DateTime @default(now())
+}
+
+// ============================================
+// SKILLS, TRACKS, MODULES
+// ============================================
+
+model SkillTrack {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  category    String // "design", "trades", "finance", "digital"
+  difficulty  Int      @default(1) // 1-5
+  estMinutes  Int // total est. completion time
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  modules     Module[]
+  enrollments Enrollment[]
+  credentials Credential[]
+  gigs        Gig[] // gigs that require this track/skill
+}
+
+model Module {
+  id           String            @id @default(cuid())
+  skillTrackId String
+  skillTrack   SkillTrack        @relation(fields: [skillTrackId], references: [id])
+  order        Int // sequence within track
+  title        String
+  contentType  ModuleContentType @default(TEXT)
+  contentBody  String // markdown/text, or storage key for audio/image
+  estMinutes   Int               @default(5)
+  createdAt    DateTime          @default(now())
+
+  task     Task?
+  progress ModuleProgress[]
+
+  @@unique([skillTrackId, order])
+}
+
+model Task {
+  id             String         @id @default(cuid())
+  moduleId       String         @unique
+  module         Module         @relation(fields: [moduleId], references: [id])
+  instructions   String
+  submissionType SubmissionType
+  rubric         Json // structured grading criteria for AI/human grading
+  requiresHuman  Boolean        @default(false) // forces HUMAN_REVIEW regardless of AI score
+  createdAt      DateTime       @default(now())
+
+  submissions Submission[]
+}
+
+// ============================================
+// ENROLLMENT & PROGRESS
+// ============================================
+
+model Enrollment {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  skillTrackId String
+  skillTrack   SkillTrack @relation(fields: [skillTrackId], references: [id])
+  startedAt    DateTime   @default(now())
+  completedAt  DateTime?
+
+  moduleProgress ModuleProgress[]
+
+  @@unique([userId, skillTrackId])
+}
+
+model ModuleProgress {
+  id           String     @id @default(cuid())
+  enrollmentId String
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id])
+  moduleId     String
+  module       Module     @relation(fields: [moduleId], references: [id])
+  startedAt    DateTime   @default(now())
+  completedAt  DateTime?
+
+  @@unique([enrollmentId, moduleId])
+}
+
+// ============================================
+// SUBMISSIONS, GRADING, ASSESSMENTS
+// ============================================
+
+model Submission {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  taskId      String
+  task        Task             @relation(fields: [taskId], references: [id])
+  content     String // text, or storage key/URL for media
+  status      SubmissionStatus @default(PENDING)
+  aiScore     Float?
+  aiFeedback  String?
+  submittedAt DateTime         @default(now())
+  gradedAt    DateTime?
+
+  assessment Assessment?
+}
+
+model Assessment {
+  id           String           @id @default(cuid())
+  submissionId String           @unique
+  submission   Submission       @relation(fields: [submissionId], references: [id])
+  assessorId   String
+  assessor     User             @relation("AssessorGivenAssessments", fields: [assessorId], references: [id])
+  decision     SubmissionStatus // HUMAN_REVIEW -> VERIFIED or REJECTED
+  comments     String?
+  reviewedAt   DateTime         @default(now())
+}
+
+// ============================================
+// CREDENTIALS (tamper-evident proof-of-skill)
+// ============================================
+
+model Credential {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id])
+  skillTrackId String
+  skillTrack   SkillTrack     @relation(fields: [skillTrackId], references: [id])
+  tier         CredentialTier @default(TASK_VERIFIED)
+  evidenceHash String // sha256 of underlying submissions/assessments payload
+  publicSlug   String         @unique // public verification URL slug
+  issuedAt     DateTime       @default(now())
+  upgradedAt   DateTime? // when tier was last upgraded
+  revoked      Boolean        @default(false)
+
+  fieldVerification FieldVerification?
+}
+
+// Confirms real paid work happened — the top trust tier
+model FieldVerification {
+  id            String     @id @default(cuid())
+  credentialId  String     @unique
+  credential    Credential @relation(fields: [credentialId], references: [id])
+  gigId         String?    @unique
+  gig           Gig?       @relation(fields: [gigId], references: [id])
+  confirmedById String // employer user id who confirmed
+  amountPaid    Decimal?
+  confirmedAt   DateTime   @default(now())
+  notes         String?
+}
+
+// ============================================
+// GIGS / OPPORTUNITIES / MATCHING
+// ============================================
+
+model Gig {
+  id           String         @id @default(cuid())
+  postedById   String
+  postedBy     User           @relation("GigPoster", fields: [postedById], references: [id])
+  title        String
+  description  String
+  skillTrackId String
+  skillTrack   SkillTrack     @relation(fields: [skillTrackId], references: [id])
+  minTier      CredentialTier @default(TASK_VERIFIED)
+  pay          Decimal?
+  location     String?
+  status       GigStatus      @default(OPEN)
+  createdAt    DateTime       @default(now())
+
+  matches           GigMatch[]
+  fieldVerification FieldVerification?
+}
+
+model GigMatch {
+  id          String      @id @default(cuid())
+  gigId       String
+  gig         Gig         @relation(fields: [gigId], references: [id])
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  status      MatchStatus @default(SUGGESTED)
+  matchScore  Float? // computed relevance score
+  createdAt   DateTime    @default(now())
+  respondedAt DateTime?
+
+  @@unique([gigId, userId])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  payload   Json
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+}
