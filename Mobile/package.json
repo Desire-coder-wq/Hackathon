@@ -10,7 +10,10 @@
     "react-native": "0.86.0"
   },
   "devDependencies": {
+    "@react-native/codegen": "^0.86.0",
     "@types/react": "~19.2.2",
+    "babel-plugin-syntax-hermes-parser": "^0.37.0",
+    "hermes-parser": "^0.37.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
